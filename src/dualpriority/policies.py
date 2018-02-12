@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 def dajamPromotions(taskset):
     rmSortedTaskset = rmSortedTasks(taskset)
-    longestResponseTimes = fpRMResponseTimes(taskset)
 
     maxPrio = len(taskset)
 
@@ -110,12 +109,31 @@ def dichotomicPromotionSearch(taskset):
 
 
 def genLpViableTasks(taskset):
-    longestResponseTimes = lpvResponseTimes(taskset)
-    for task in taskset:
-        taskResponseTime = longestResponseTimes[task]
-        rmLaxity = task.minimalInterArrivalTime - taskResponseTime
-        if rmLaxity >= 0:
-            yield task
+    """
+    Generate LPV tasks of the taskset, in order.
+
+    The first generated task is viable at the smallest priority level.
+    The second task is viable at the level just above that, and so on.
+    """
+
+    remainingTasks = set(taskset)
+
+    def findLpv(remainingTasks):
+        for task in remainingTasks:
+            interferingTasks = [t for t in remainingTasks if t is not task]
+            taskResponseTime = responseTime(task, interferingTasks)
+            laxity = task.minimalInterArrivalTime - taskResponseTime
+            if laxity >= 0:
+                return task
+        return None
+
+    while remainingTasks:
+        lpvTask = findLpv(remainingTasks)
+        if lpvTask is not None:
+            yield lpvTask
+            remainingTasks.remove(lpvTask)
+        else:
+            break
 
 
 def _dajamPromo(taskset, task):
@@ -158,33 +176,26 @@ def _simuRMResponseTimes(taskset):
     return longestResponseTimes
 
 
-def lpvResponseTimes(taskset):
+def responseTime(task, interferingTasks):
 
-    def otherTasks(task):
-        return (t for t in taskset if t is not task)
-
-    def interferences(task, time):
-        for t in otherTasks(task):
+    def interferences(time):
+        for t in interferingTasks:
             w = t.wcet
             period = t.minimalInterArrivalTime
             result = w * (1 + ((time - 1) // period))
             yield result
 
-    def genDict():
-        for task in taskset:
-            rt = 0
-            nextRt = task.wcet
-            limit = task.deadline * 2
-            while rt < nextRt < limit:
-                rt = nextRt
-                intf = interferences(task, rt)
-                interferenceTotal = sum(intf)
-                nextRt = task.wcet + interferenceTotal
-            if nextRt > limit:
-                nextRt = limit
-            yield task, nextRt
-
-    return dict(genDict())
+    rt = 0
+    nextRt = task.wcet
+    limit = task.deadline * 2
+    while rt < nextRt < limit:
+        rt = nextRt
+        intf = interferences(rt)
+        interferenceTotal = sum(intf)
+        nextRt = task.wcet + interferenceTotal
+    if nextRt > limit:
+        nextRt = limit
+    return nextRt
 
 
 def fpRMResponseTimes(taskset):

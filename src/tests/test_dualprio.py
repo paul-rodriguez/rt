@@ -5,6 +5,7 @@ from crpd.model import Task, Taskset
 from crpd.policy import DualPrioritySchedulingPolicy, DualPriorityTaskInfo
 from crpd.sim import SimulationRun, SimulationSetup
 from crpd.hist import DeadlineMiss
+from crpd.gen import TasksetGenerator, RandomValue, PeriodGenerator
 from dualpriority.burns import burnsWellingsPolicy
 from dualpriority.policies import (rmLaxityPromotions,
                                    dichotomicPromotionSearch,
@@ -15,13 +16,56 @@ from dualpriority.threeTasks import (RMWorstCaseLaxity3TaskOptimiser,
                                      OptimisationFailure)
 
 
+def test_lpvTrivial1():
+    t1 = Task(1, 10)
+    t2 = Task(2, 30)
+    t3 = Task(5, 100)
+    taskset = Taskset(t1, t2, t3)
+    expected = {t1, t2, t3}
+    lpvTasks = set(genLpViableTasks(taskset))
+    assert lpvTasks == expected
+
+
+def test_lpvTrivial2():
+    taskset = Taskset(Task(13536, 67999),
+                      Task(1440, 90690),
+                      Task(2266, 39305),
+                      Task(2512, 28902),
+                      Task(3374, 62477),
+                      Task(377, 20593))
+    expected = set(taskset)
+    lpvTasks = set(genLpViableTasks(taskset))
+    assert lpvTasks == expected
+
+
+def test_lpvTrivialGen():
+    pg = PeriodGenerator(randomValue=RandomValue(logRange=(10, 100)))
+    gen = TasksetGenerator(seed=1337,
+                           utilization=RandomValue(floatrange=(0.1, 0.65)),
+                           periodGenerator=pg,
+                           nbTasks=RandomValue(intrange=(2, 10)))
+    for _ in range(100):
+        taskset = gen()
+        lpvTasks = set(genLpViableTasks(taskset))
+        expected = set(taskset)
+        assert lpvTasks == expected
+
+
+def test_lpvNonTrivial():
+    t4 = Task(587, 45124)
+    taskset = Taskset(Task(1155, 15964),
+                      Task(1649, 10359),
+                      Task(4343, 14821),
+                      t4,
+                      Task(6028, 19430))
+    expected = {t4}
+    lpvTasks = set(genLpViableTasks(taskset))
+    assert lpvTasks == expected
+
+
 def test_lpvSearch():
-    t2 = Task(11, 90)
-    t3 = Task(31, 83)
-
-    taskset = Taskset(Task(10, 24), t2, t3)
-
-    expected = set([t2, t3])
+    taskset = Taskset(Task(10, 24), Task(31, 83), Task(12, 90))
+    expected = set(taskset)
     lpvTasks = set(genLpViableTasks(taskset))
     assert lpvTasks == expected
 
@@ -87,7 +131,7 @@ def test_noPreprocessingFailures():
                        Task(25, 57)))
 
     for taskset in systems:
-        lpvTasks = list(genLpViableTasks(taskset))
+        lpvTasks = set(genLpViableTasks(taskset))
         assert not lpvTasks
 
 
