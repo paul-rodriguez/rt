@@ -1,7 +1,6 @@
 
 import pytest
 import logging
-from .loggers import eqLog
 
 from crpd.policy import SchedulerTag
 from crpd.sim import SimulationSetup

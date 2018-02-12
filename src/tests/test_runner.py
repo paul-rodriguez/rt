@@ -7,10 +7,8 @@ from crpd.hist import (SimulatorState, EDFSchedulerState,
 from crpd.model import Task, Taskset, FixedArrivalDistribution
 from crpd.runner import simulationRunner
 
-from .loggers import schedLog
 
-
-def test_monocoreRun(schedLog):
+def test_monocoreRun():
     t1 = Task(1, 10, FixedArrivalDistribution(10), displayName='t')
     setup = SimulationSetup(Taskset(t1), time=1000)
     setups = [setup]

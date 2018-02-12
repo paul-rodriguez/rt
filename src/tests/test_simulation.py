@@ -13,7 +13,6 @@ from crpd.hist import (SimulatorState, JobState, StateCompletion,
                        StateArrival, StateDeadline, EDFSchedulerState,
                        DeadlineMiss, Preemption, RMSchedulerState)
 from crpd.runner import SimulationRun
-from .loggers import histLog, schedLog, simulatorLog
 
 
 def test_simuError2():
@@ -90,7 +89,7 @@ def test_rmMiss():
     assert result.history.hasDeadlineMiss()
 
 
-def test_edfMiss(schedLog):
+def test_edfMiss():
     taskset = Taskset(Task(7121, 15449, FixedArrivalDistribution(15449)),
                       Task(1116, 8353, FixedArrivalDistribution(8353)),
                       Task(16554, 82248, FixedArrivalDistribution(82248)),

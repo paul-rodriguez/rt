@@ -1,7 +1,6 @@
 
 import pytest
 
-from .loggers import statsLog
 from crpd.model import LogPreemptionCost
 from crpd.gen import TasksetGenerator, RandomValue
 from crpd.stats import AggregatorTag, SimulationStatistics

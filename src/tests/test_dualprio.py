@@ -1,5 +1,6 @@
 
-from .loggers import testLog, schedLog, simulatorLog, analysisLog
+import pytest
+
 from crpd.model import Task, Taskset
 from crpd.policy import DualPrioritySchedulingPolicy, DualPriorityTaskInfo
 from crpd.sim import SimulationRun, SimulationSetup
@@ -14,7 +15,7 @@ from dualpriority.threeTasks import (RMWorstCaseLaxity3TaskOptimiser,
                                      OptimisationFailure)
 
 
-def test_lpvSearch(testLog):
+def test_lpvSearch():
     t2 = Task(11, 90)
     t3 = Task(31, 83)
 
@@ -25,7 +26,7 @@ def test_lpvSearch(testLog):
     assert lpvTasks == expected
 
 
-def test_noPrepFailure1(testLog):
+def test_noPrepFailure1():
     taskset = Taskset(Task(7, 24),
                       Task(4, 50),
                       Task(22, 36))
@@ -41,7 +42,7 @@ def test_noPrepFailure1(testLog):
     assert history.hasDeadlineMiss()
 
 
-def test_noPreprocessingFailures(testLog):
+def test_noPreprocessingFailures():
     systems = (Taskset(Task(1, 40),
                        Task(17, 119),
                        Task(7, 60),
@@ -90,14 +91,13 @@ def test_noPreprocessingFailures(testLog):
         assert not lpvTasks
 
 
-def test_dajamPromo1(testLog):
+def test_dajamPromo1():
     t1 = Task(3, 6)
     t2 = Task(2, 8)
     t3 = Task(3, 12)
     taskset = Taskset(t1, t2, t3)
 
     policy = dajamPromotions(taskset)
-    testLog.info('%s', policy)
 
     setup = SimulationSetup(taskset,
                             taskset.hyperperiod,
@@ -108,14 +108,14 @@ def test_dajamPromo1(testLog):
     assert not history.hasDeadlineMiss()
 
 
-def test_bwPolicy1(testLog):
+@pytest.mark.skip
+def test_bwPolicy1():
     t1 = Task(3, 6)
     t2 = Task(2, 8)
     t3 = Task(3, 12)
     taskset = Taskset(t1, t2, t3)
 
     bwPolicy = burnsWellingsPolicy(taskset)
-    testLog.info('%s', bwPolicy)
 
     setup = SimulationSetup(taskset,
                             taskset.hyperperiod,
@@ -126,7 +126,7 @@ def test_bwPolicy1(testLog):
     assert not history.hasDeadlineMiss()
 
 
-def test_counterExample1(testLog):
+def test_counterExample1():
     t1 = Task(23, 40)
     t2 = Task(23, 58)
     t3 = Task(1, 60)
@@ -151,7 +151,7 @@ def test_counterExample1(testLog):
     assert not dHistory.hasDeadlineMiss()
 
 
-def test_example1(testLog):
+def test_example1():
     t1 = Task(38, 51)
     t2 = Task(1, 52)
     t3 = Task(8, 42)
@@ -168,7 +168,7 @@ def test_example1(testLog):
     assert not history.hasDeadlineMiss()
 
 
-def test_example2(testLog):
+def test_example2():
     t1 = Task(5, 18)
     t2 = Task(16, 24)
     t3 = Task(1, 25)
@@ -185,7 +185,7 @@ def test_example2(testLog):
     assert not history.hasDeadlineMiss()
 
 
-def test_example3(testLog):
+def test_example3():
     t1 = Task(3, 6)
     t2 = Task(4, 9)
     t3 = Task(1, 18)
@@ -202,7 +202,7 @@ def test_example3(testLog):
     assert not history.hasDeadlineMiss()
 
 
-def test_example4(testLog):
+def test_example4():
     t1 = Task(6, 13)
     t2 = Task(8, 18)
     t3 = Task(6, 86)
@@ -219,7 +219,7 @@ def test_example4(testLog):
     assert history.hasDeadlineMiss()
 
 
-def test_example5(testLog):
+def test_example5():
     t1 = Task(13, 51)
     t2 = Task(83, 128)
     t3 = Task(16, 183)
@@ -236,14 +236,14 @@ def test_example5(testLog):
     assert history.hasDeadlineMiss()
 
 
-def test_example5AnyPromo(testLog):
+@pytest.mark.slowtest
+def test_example5AnyPromo():
     t1 = Task(13, 51)
     t2 = Task(83, 128)
     t3 = Task(16, 183)
     taskset = Taskset(t1, t2, t3)
 
     policy = dichotomicPromotionSearch(taskset)
-    testLog.info('Policy %s', policy)
     setup = SimulationSetup(taskset,
                             taskset.hyperperiod,
                             schedulingPolicy=policy,
@@ -254,7 +254,7 @@ def test_example5AnyPromo(testLog):
     assert not history.hasDeadlineMiss()
 
 
-def test_example6(testLog):
+def test_example6():
     t1 = Task(22, 87)
     t2 = Task(131, 237)
     t3 = Task(53, 280)
@@ -271,7 +271,7 @@ def test_example6(testLog):
     assert history.hasDeadlineMiss()
 
 
-def test_example7(testLog):
+def test_example7():
     t1 = Task(1, 5)
     t2 = Task(6, 39)
     t3 = Task(16, 39)
@@ -288,7 +288,7 @@ def test_example7(testLog):
     assert not history.hasDeadlineMiss()
 
 
-def test_damien1(testLog):
+def test_damien1():
     t1 = Task(1, 4, displayName='t1')
     t2 = Task(2, 15, displayName='t2')
     t3 = Task(14, 23, displayName='t3')
@@ -306,7 +306,7 @@ def test_damien1(testLog):
     assert not history.hasDeadlineMiss()
 
 
-def test_damien2(testLog):
+def test_damien2():
     t1 = Task(3, 6, displayName='t1')
     t2 = Task(4, 9, displayName='t2')
     t3 = Task(2, 36, displayName='t3')
@@ -323,7 +323,8 @@ def test_damien2(testLog):
     assert not history.hasDeadlineMiss()
 
 
-def test_damien3(testLog):
+@pytest.mark.skip
+def test_damien3():
     t1 = Task(8, 20, displayName='t1')
     t2 = Task(15, 28, displayName='t2')
     t3 = Task(8, 136, displayName='t3')
@@ -340,7 +341,8 @@ def test_damien3(testLog):
     assert not history.hasDeadlineMiss()
 
 
-def test_damien4(testLog):
+@pytest.mark.skip
+def test_damien4():
     t1 = Task(8, 20, displayName='t1')
     t2 = Task(15, 28, displayName='t2')
     t3 = Task(8, 136, displayName='t3')
@@ -357,7 +359,7 @@ def test_damien4(testLog):
     assert not history.hasDeadlineMiss()
 
 
-def test_laurent1(testLog):
+def test_laurent1():
     t1 = Task(2, 11, displayName='t1')
     t2 = Task(9, 19, displayName='t2')
     t3 = Task(7, 21, displayName='t3')
@@ -374,7 +376,7 @@ def test_laurent1(testLog):
     assert not history.hasDeadlineMiss()
 
 
-def test_3PWorstLaxity1(testLog):
+def test_3PWorstLaxity1():
     taskset = Taskset(Task(33, 90),
                       Task(16, 39),
                       Task(3, 28))
@@ -383,7 +385,7 @@ def test_3PWorstLaxity1(testLog):
     assert not history.hasDeadlineMiss()
 
 
-def test_firstT2Job1Standard(schedLog, simulatorLog):
+def test_firstT2Job1Standard():
     t1 = Task(2, 12, displayName='t1')
     t2 = Task(17, 33, displayName='t2')
     t3 = Task(13, 57, displayName='t3')
@@ -400,7 +402,7 @@ def test_firstT2Job1Standard(schedLog, simulatorLog):
     result = SimulationRun(setup).result()
 
 
-def test_3Pworst(testLog):
+def test_3Pworst():
     t1 = Task(3, 9)
     t2 = Task(8, 12)
     t3 = Task(1, 1000)
@@ -434,7 +436,7 @@ def test_3PMiss1():
     assert not history.hasDeadlineMiss()
 
 
-def test_analysisBW1(analysisLog, testLog):
+def test_analysisBW1():
     t1 = Task(3, 6)
     t2 = Task(2, 8)
     t3 = Task(3, 12)
@@ -446,12 +448,10 @@ def test_analysisBW1(analysisLog, testLog):
         (t1, DualPriorityTaskInfo(3, 3, -3)),
         (t2, DualPriorityTaskInfo(2, 6, -2)),
         (t3, DualPriorityTaskInfo(1)))
-    testLog.info('Expected %s', expectedPolicy)
-    testLog.info('Effective %s', policy)
     assert expectedPolicy == policy
 
 
-def test_analysisBW2(analysisLog, testLog):
+def test_analysisBW2():
     t1 = Task(3, 12)
     t2 = Task(4, 16)
     t3 = Task(4, 20)
@@ -465,12 +465,10 @@ def test_analysisBW2(analysisLog, testLog):
         (t2, DualPriorityTaskInfo(3, 9, -3)),
         (t3, DualPriorityTaskInfo(2)),
         (t4, DualPriorityTaskInfo(1)))
-    testLog.info('Expected %s', expectedPolicy)
-    testLog.info('Effective %s', policy)
     assert expectedPolicy == policy
 
 
-def test_analysisBW3(analysisLog, testLog):
+def test_analysisBW3():
     t1 = Task(4, 16)
     t2 = Task(5, 20)
     t3 = Task(11, 28)
@@ -484,12 +482,10 @@ def test_analysisBW3(analysisLog, testLog):
         (t2, DualPriorityTaskInfo(3, 11, -3)),
         (t3, DualPriorityTaskInfo(2, 8, -2)),
         (t4, DualPriorityTaskInfo(1)))
-    testLog.info('Expected %s', expectedPolicy)
-    testLog.info('Effective %s', policy)
     assert policy == expectedPolicy
 
 
-def test_analysisBW4(analysisLog, testLog):
+def test_analysisBW4():
     t1 = Task(1, 4)
     t2 = Task(1, 6)
     t3 = Task(3, 12)
@@ -505,8 +501,6 @@ def test_analysisBW4(analysisLog, testLog):
         (t3, DualPriorityTaskInfo(3, 6, -3)),
         (t4, DualPriorityTaskInfo(2, 18, -2)),
         (t5, DualPriorityTaskInfo(1)))
-    testLog.info('Expected %s', expectedPolicy)
-    testLog.info('Effective %s', policy)
     assert policy == expectedPolicy
 
 
@@ -752,7 +746,7 @@ def test_dualPriorityBW4_3():
     assert not result.history.hasDeadlineMiss()
 
 
-def test_simuDualPrio(schedLog, simulatorLog):
+def test_simuDualPrio():
     t1 = Task(5, 10)
     t2 = Task(10, 20)
 

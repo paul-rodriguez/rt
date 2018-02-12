@@ -1,12 +1,11 @@
 
-from .loggers import statsLog
 from crpd.model import (Task, Taskset, FixedArrivalDistribution,
                         LogPreemptionCost, FixedPreemptionCost)
 from crpd.sim import SimulationSetup, SimulationRun
 from crpd.stats import SimulationStatistics, AggregatorTag
 
 
-def test_preemptionTimeAggregator(statsLog):
+def test_preemptionTimeAggregator():
     longTask = Task(20,
                     50,
                     FixedArrivalDistribution(50),
@@ -28,7 +27,7 @@ def test_preemptionTimeAggregator(statsLog):
     assert aggregatePreemptTime == 10
 
 
-def test_preemptionNbAggregator(statsLog):
+def test_preemptionNbAggregator():
     longTask = Task(20,
                     50,
                     FixedArrivalDistribution(50),
@@ -50,7 +49,7 @@ def test_preemptionNbAggregator(statsLog):
     assert aggregateNbPreempt == 5
 
 
-def test_executionTimeStats(statsLog):
+def test_executionTimeStats():
     longTask = Task(20,
                     50,
                     FixedArrivalDistribution(50),
@@ -70,7 +69,7 @@ def test_executionTimeStats(statsLog):
     assert execTime == 26
 
 
-def test_executionTimeAggregator(statsLog):
+def test_executionTimeAggregator():
     longTask = Task(20,
                     50,
                     FixedArrivalDistribution(50),
@@ -90,7 +89,7 @@ def test_executionTimeAggregator(statsLog):
     assert aggregateExecTime == 26
 
 
-def test_freePreemptionsTotals(statsLog):
+def test_freePreemptionsTotals():
     longTask = Task(20,
                     50,
                     FixedArrivalDistribution(50),

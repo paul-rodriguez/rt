@@ -1,6 +1,5 @@
 from tempfile import TemporaryDirectory
 
-from .loggers import eqLog
 from crpd.model import (Task, Taskset, FixedArrivalDistribution,
                         PoissonArrivalDistribution, LogPreemptionCost,
                         FixedPreemptionCost)
