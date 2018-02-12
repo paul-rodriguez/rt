@@ -12,8 +12,7 @@ The virtual environment is created in the directory containing this readme.
 
 # Usage
 
-Useful entry point scripts (simulations, graph makers etc.) are in the `src/`
-folder.
+Useful entry point scripts are in the `src/` folder.
 
 To execute your own scripts, run them with the `python` interpreter found in
 `virtualenv/bin/` after installation and make sure the modules in the `/src`
@@ -26,7 +25,7 @@ code.
 Read the tests in the `/tests` directory to have examples of how to use these
 modules.
 
-# Tests
+## Tests
 
 To run tests, invoke the `pytest` executable found in `virtualenv/bin/` with
 the `src/` folder as current directory (or pass it as argument to pytest).
@@ -34,3 +33,8 @@ Pytest supports various options for test collection (such as running a test file
 or function in particular).
 You can copy, extend or modify existing test files to run your own simulations,
 pytest doesn't need to be configured to find your tests.
+
+## dpsearch.py
+
+This script searches for systems that are not schedulable with the RML
+(RM Laxity) dual-priority assignment policy.
