@@ -98,6 +98,12 @@ class DualPrioritySchedulingPolicy(AbstractSchedulingPolicy):
     def tag(self):
         return SchedulerTag.DP
 
+    def tasks(self):
+        return {task for task, _ in self._taskPriorities}
+
+    def promotedTasks(self):
+        return {task for task in self.tasks() if self.hasPromotion(task)}
+
 
 class DualPriorityTaskInfo(ValueEqual):
 

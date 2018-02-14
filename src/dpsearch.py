@@ -65,13 +65,16 @@ def equalPeriodTest(taskset, policy):
 
 def execFunction(taskset, lpvPrep):
     policy = rmLaxityPromotions(taskset, lpvPrep=lpvPrep)
-    setup = SimulationSetup(taskset,
-                            taskset.hyperperiod,
-                            schedulingPolicy=policy,
-                            trackHistory=False,
-                            trackPreemptions=False)
-    result = SimulationRun(setup).result()
-    history = result.history
+    if len(policy.promotedTasks()) > 0:
+        setup = SimulationSetup(taskset,
+                                taskset.hyperperiod,
+                                schedulingPolicy=policy,
+                                trackHistory=False,
+                                trackPreemptions=False)
+        result = SimulationRun(setup).result()
+        history = result.history
+    else:
+        history = True
     return history, policy, taskset
 
 
@@ -86,7 +89,9 @@ def multicoreLoop(tasksets, nbProcesses, disablePrep):
             logging.info('Hyperperiod: {}'.format(taskset.hyperperiod))
             logging.info('Utilization: {}'.format(taskset.utilization))
             logging.info('Result policy: %s', policy)
-            if history.hasDeadlineMiss():
+            if history is True:
+                logging.info('All LPV')
+            elif history.hasDeadlineMiss():
                 failures.add(taskset)
                 logging.warning('Deadline miss %s',
                                 history.firstDeadlineMiss())
@@ -145,16 +150,33 @@ def runMcSearch(tasksets,
 
 
 def runLPVSearch(tasksets):
+    nbFullLPV = 0
+    nbNoLPV = 0
+    total = 0
+    nbLPVTasks = 0
+    nbTasks = 0
     for taskset in tasksets:
         lpvTasks = list(genLpViableTasks(taskset))
-        if len(lpvTasks) > 0:
+        nbLpv = len(lpvTasks)
+        nbLPVTasks += nbLpv
+        nbTasks += len(taskset)
+        total += 1
+        if nbLpv > 0:
+            if nbLpv == len(taskset):
+                nbFullLPV += 1
             print('{}/{} LPV Tasks {} \n'
                   'for taskset {}'.format(len(lpvTasks), len(taskset),
                                           lpvTasks, taskset))
             policy = rmLaxityPromotions(taskset)
             print('Policy {}'.format(policy))
         else:
+            nbNoLPV += 1
             print('No LPV')
+    print('Nb full LPV: {}'.format(nbFullLPV))
+    print('Nb no LPV: {}'.format(nbNoLPV))
+    print('Total: {}'.format(total))
+
+    print('Fraction of LPV tasks: {}'.format(nbLPVTasks / nbTasks))
 
 
 def main(args):

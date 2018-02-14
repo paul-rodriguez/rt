@@ -136,11 +136,20 @@ class Task(ValueEqual):
         if self._displayName is not None:
             return self._displayName
         else:
-            fmtStr = 'Task({}, {}, {}, {})'
+            if self._arrivalDistrib == FixedArrivalDistribution(self.deadline):
+                adStr = ''
+            else:
+                adStr = ', arrivalDistrib='+str(self._arrivalDistrib)
+            if self._preemptionCost == FixedPreemptionCost(0):
+                pcStr = ''
+            else:
+                pcStr = ', preemptionCost='+str(self._preemptionCost)
+            fmtStr = 'Task({}, {}{}{})'
+
             items = (self.wcet,
                      self.deadline,
-                     self._arrivalDistrib,
-                     self._preemptionCost)
+                     adStr,
+                     pcStr)
             return fmtStr.format(*items)
 
     def __lt__(self, other):
@@ -167,7 +176,7 @@ class FixedPreemptionCost(ValueEqual):
         return self._cost
 
     def __repr__(self):
-        return 'FixedPC({})'.format(self._cost)
+        return 'FixedPreemptionCost({})'.format(self._cost)
 
 
 class LogPreemptionCost(ValueEqual):
@@ -231,7 +240,7 @@ class FixedArrivalDistribution(ValueEqual):
         return self._period * releaseIndex
 
     def __repr__(self):
-        return "FixedAD({})".format(self._period)
+        return "FixedArrivalDistribution({})".format(self._period)
 
 
 class PoissonArrivalDistribution(ValueEqual):

@@ -70,22 +70,6 @@ def test_lpvSearch():
     assert lpvTasks == expected
 
 
-def test_noPrepFailure1():
-    taskset = Taskset(Task(7, 24),
-                      Task(4, 50),
-                      Task(22, 36))
-
-    policy = rmLaxityPromotions(taskset)
-    setup = SimulationSetup(taskset,
-                            taskset.hyperperiod,
-                            schedulingPolicy=policy,
-                            trackHistory=True,
-                            trackPreemptions=False)
-    result = SimulationRun(setup).result()
-    history = result.history
-    assert history.hasDeadlineMiss()
-
-
 def test_noPreprocessingFailures():
     systems = (Taskset(Task(1, 40),
                        Task(17, 119),
@@ -133,6 +117,46 @@ def test_noPreprocessingFailures():
     for taskset in systems:
         lpvTasks = set(genLpViableTasks(taskset))
         assert not lpvTasks
+        policy = rmLaxityPromotions(taskset)
+        setup = SimulationSetup(taskset,
+                                taskset.hyperperiod,
+                                schedulingPolicy=policy,
+                                deadlineMissFilter=True)
+        result = SimulationRun(setup).result()
+        history = result.history
+        assert history.hasDeadlineMiss()
+
+
+def test_noPrepFailure1():
+    taskset = Taskset(Task(7, 24),
+                      Task(4, 50),
+                      Task(22, 36))
+
+    policy = rmLaxityPromotions(taskset)
+    setup = SimulationSetup(taskset,
+                            taskset.hyperperiod,
+                            schedulingPolicy=policy,
+                            trackHistory=True,
+                            trackPreemptions=False)
+    result = SimulationRun(setup).result()
+    history = result.history
+    assert history.hasDeadlineMiss()
+
+
+def test_withPrepFailure1():
+    taskset = Taskset(Task(1, 24),
+                      Task(12, 127),
+                      Task(11, 26),
+                      Task(1, 100),
+                      Task(16, 39))
+    policy = rmLaxityPromotions(taskset)
+    setup = SimulationSetup(taskset,
+                            taskset.hyperperiod,
+                            schedulingPolicy=policy,
+                            deadlineMissFilter=True)
+    result = SimulationRun(setup).result()
+    history = result.history
+    assert history.hasDeadlineMiss()
 
 
 def test_dajamPromo1():
