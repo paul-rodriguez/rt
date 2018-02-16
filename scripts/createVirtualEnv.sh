@@ -14,6 +14,7 @@ pypyVirtualenv="${pypyDir}/bin/virtualenv-pypy"
 
 wget -N ${pypyUrl}
 tar -xf pypy3.5-5.10.1-linux_x86_64-portable.tar.bz2
+mkdir -p ${pypyDir}
 mv -n pypy3.5-5.10.1-linux_x86_64-portable/* ${pypyDir}
 ${pypyVirtualenv} --clear ${envPath}
 ${envExec} -m pip install --exists-action i -r ${requirementsFile}

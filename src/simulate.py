@@ -42,6 +42,7 @@ Taskset description format:
 from concurrent.futures import ProcessPoolExecutor
 import docopt
 import re
+import itertools
 
 from crpd.model import Task, Taskset
 from crpd.policy import DualPriorityTaskInfo, DualPrioritySchedulingPolicy
@@ -120,9 +121,11 @@ def main(args):
         nbProcesses = None
 
     with open(fileName) as file:
-        setups = list(genSetups(file))
-
-    runSimulations(setups, nbProcesses)
+        setups = genSetups(file)
+        setupSlice = list(itertools.islice(setups, 10000))
+        while setupSlice:
+            runSimulations(setupSlice, nbProcesses)
+            setupSlice = list(itertools.islice(setups, 10000))
 
 
 if __name__ == '__main__':
