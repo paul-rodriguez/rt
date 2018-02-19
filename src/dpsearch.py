@@ -21,7 +21,6 @@ from dualpriority.policies import (rmLaxityPromotions,
                                    fpRMResponseTimes,
                                    genLpViableTasks,
                                    dajamPromotions)
-from dualpriority.utils import rmSortedTasks
 
 
 def genTasksets(nbTasksets, seed, periodInterval, nbTasks):
@@ -46,21 +45,6 @@ def genTasksets(nbTasksets, seed, periodInterval, nbTasks):
                              taskset.hyperperiod)
 
     return list(filterHyperperiod())
-
-
-def equalPeriodTest(taskset, policy):
-    rmTaskset = rmSortedTasks(taskset)
-    leastPromotedTask = rmTaskset[-2]
-    if policy.hasPromotion(leastPromotedTask):
-        lastTask = rmTaskset[-1]
-        lastTPeriod = lastTask.minimalInterArrivalTime
-        lpPeriod = leastPromotedTask.minimalInterArrivalTime
-        rmRT = fpRMResponseTimes(taskset)
-        responseTime = rmRT[leastPromotedTask]
-        if responseTime > lpPeriod:
-            logging.warning('Task 2 misses deadlines in RM')
-            if lastTPeriod != lpPeriod:
-                logging.critical('Detected inconsistency')
 
 
 def execFunction(taskset, lpvPrep):

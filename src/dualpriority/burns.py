@@ -1,7 +1,7 @@
 
 import logging
 
-from .utils import rmSortedTasks, baseRMPolicy, getHistory
+from .internals import rmSortedTasks, baseRMPolicy, getHistory
 from crpd.hist import DeadlineMissFilter
 from crpd.sim import Simulation
 

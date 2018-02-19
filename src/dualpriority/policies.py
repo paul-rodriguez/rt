@@ -4,10 +4,13 @@ import logging
 from crpd.policy import DualPrioritySchedulingPolicy, DualPriorityTaskInfo
 from crpd.sim import SimulationSetup, SimulationRun
 from crpd.stats import AggregatorTag
-from .utils import (rmSortedTasks,
-                    minusRmSortedTasks,
-                    baseRMPolicy,
-                    getHistory)
+from .internals import (rmSortedTasks,
+                        minusRmSortedTasks,
+                        baseRMPolicy,
+                        getHistory,
+                        baseRMRMPolicy,
+                        findFirstDeadlineMiss,
+                        fixRMRMPolicy)
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +45,19 @@ def dajamPromotions(taskset):
                    DualPriorityTaskInfo(prio))
 
     policy = DualPrioritySchedulingPolicy(*genPrios())
+    return policy
+
+
+def greedyDeadlineFixPolicy(taskset):
+    """
+    Returns a RM/RM DP policy with promotion times set according to a greedy
+    process that gradually decrements promotions to fix deadline misses.
+    """
+    policy = baseRMRMPolicy(taskset)
+    dm = findFirstDeadlineMiss(taskset, policy)
+    while dm is not None:
+        policy = fixRMRMPolicy(policy, dm)
+        dm = findFirstDeadlineMiss(taskset, policy)
     return policy
 
 
@@ -277,10 +293,6 @@ def _successForTask(promotedTask, taskset, policy):
     hasDeadlineMiss = len(history.deadlineMisses(taskset.hyperperiod,
                                                  task=promotedTask)) > 0
     return not hasDeadlineMiss
-
-
-class _ValidPromotionNotFound(Exception):
-    pass
 
 
 def _removedPromotions(tasks, policy):

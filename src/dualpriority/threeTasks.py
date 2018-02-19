@@ -3,9 +3,9 @@ import logging
 from crpd.policy import DualPrioritySchedulingPolicy, DualPriorityTaskInfo
 from crpd.sim import SimulationSetup, SimulationRun
 from crpd.stats import AggregatorTag
-from .utils import (baseRMPolicy,
-                    getHistory,
-                    rmSortedTasks)
+from .internals import (baseRMPolicy,
+                        getHistory,
+                        rmSortedTasks)
 
 logger = logging.getLogger(__name__)
 
