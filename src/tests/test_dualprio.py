@@ -17,6 +17,89 @@ from dualpriority.threeTasks import (RMWorstCaseLaxity3TaskOptimiser,
                                      OptimisationFailure)
 
 
+def test_noPrepPaperFailure():
+    taskset = Taskset(Task(3, 6),
+                      Task(4, 9),
+                      Task(2, 36))
+
+    policy = rmLaxityPromotions(taskset, lpvPrep=False)
+    setup = SimulationSetup(taskset,
+                            taskset.hyperperiod,
+                            schedulingPolicy=policy,
+                            deadlineMissFilter=True)
+    result = SimulationRun(setup).result()
+    history = result.history
+    assert history.hasDeadlineMiss()
+
+
+def test_rmMinusRmSearchSuccesses():
+    systems = (Taskset(Task(9, 40),
+                       Task(9, 74),
+                       Task(35, 54)),
+               Taskset(Task(1, 40),
+                       Task(17, 106),
+                       Task(29, 62),
+                       Task(33, 96)),
+               Taskset(Task(11, 40),
+                       Task(14, 82),
+                       Task(31, 58)),
+               Taskset(Task(21, 40),
+                       Task(1, 58),
+                       Task(25, 57)),
+               Taskset(Task(1, 40),
+                       Task(12, 101),
+                       Task(16, 48),
+                       Task(37, 73)))
+
+    for taskset in systems:
+        policy = dichotomicPromotionSearch(taskset)
+        setup = SimulationSetup(taskset,
+                                taskset.hyperperiod,
+                                schedulingPolicy=policy,
+                                deadlineMissFilter=True)
+        result = SimulationRun(setup).result()
+        history = result.history
+        assert not history.hasDeadlineMiss()
+
+
+def test_rmMinusRmSearchFailures():
+    systems = (Taskset(Task(1, 40),
+                       Task(17, 119),
+                       Task(7, 60),
+                       Task(35, 100),
+                       Task(27, 75)),
+               Taskset(Task(1, 40),
+                       Task(16, 92),
+                       Task(27, 75),
+                       Task(17, 55),
+                       Task(6, 50)),
+               Taskset(Task(1, 40),
+                       Task(16, 112),
+                       Task(7, 60),
+                       Task(35, 100),
+                       Task(27, 75)),
+               Taskset(Task(1, 40),
+                       Task(16, 91),
+                       Task(27, 75),
+                       Task(17, 55),
+                       Task(6, 50)),
+               Taskset(Task(1, 40),
+                       Task(9, 107),
+                       Task(1, 54),
+                       Task(43, 60),
+                       Task(7, 51)))
+
+    for taskset in systems:
+        policy = dichotomicPromotionSearch(taskset)
+        setup = SimulationSetup(taskset,
+                                taskset.hyperperiod,
+                                schedulingPolicy=policy,
+                                deadlineMissFilter=True)
+        result = SimulationRun(setup).result()
+        history = result.history
+        assert history.hasDeadlineMiss()
+
+
 def test_GDF_3tasks():
     taskset = Taskset(Task(21, 40),
                       Task(1, 58),

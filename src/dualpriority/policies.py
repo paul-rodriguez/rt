@@ -114,7 +114,6 @@ def dichotomicPromotionSearch(taskset):
     rmPolicy = baseRMPolicy(taskset)
     history = getHistory(taskset, rmPolicy)
     dualExclude = _rmExcludedTasks(taskset, history)
-    logger.info('Least priority viable: {}'.format(dualExclude))
     dualInclude = set(taskset) - dualExclude
     startMinusRMPolicy = _setupPolicyForDual(dualInclude, rmPolicy)
     rmSortedIncluded = rmSortedTasks(dualInclude)
