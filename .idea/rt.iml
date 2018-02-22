@@ -5,7 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/pypy" />
     </content>
-    <orderEntry type="jdk" jdkName="PyPy 2.7 (rt)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="PyPy 5.10.1 [Python 3.5.3] virtualenv at ~/git/rt/virtualenv" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TestRunnerService">

@@ -1,6 +1,8 @@
 """
 Usage:
-    dpsearch.py NBSYSTEMS [-s SEED] [-h] [-c CORES] [-P|-l]
+    dpsearch.py NBSYSTEMS [-s SEED] [-h] [-c CORES] [-P|-l] \
+[--period1 PERIOD1] [--pBase PBASE] [--pTop PTOP] [--tSizes TSIZES] \
+[--uRange URANGE]
 
 Options:
     -P          Disable LPV preprocessing.
@@ -8,6 +10,13 @@ Options:
     -s SEED     Seed of the random number generator used to create task sets.
                 [default: 1337]
     -c CORES    Number of processes to spawn.
+
+Taskset generation options:
+    --period1 PERIOD1    Smallest period in the taskset. [default: 24]
+    --pBase PBASE        Base of the interval of greater periods. [default: 50]
+    --pTop PTOP          Top of the interval of greater periods. [default: 90]
+    --tSizes TSIZES      Comma-separated list of taskset sizes. [default: 3]
+    --uRange URANGE      Interval of taskset utilisations [default: 0.9,1.0]
 """
 
 from concurrent.futures import ProcessPoolExecutor
@@ -23,13 +32,13 @@ from dualpriority.policies import (rmLaxityPromotions,
                                    dajamPromotions)
 
 
-def genTasksets(nbTasksets, seed, periodInterval, nbTasks):
+def genTasksets(nbTasksets, seed, periodInterval, nbTasks, uRange):
     gen = TasksetGenerator(seed=seed,
                            scale=1,
                            nbTasks=RandomValue(value=nbTasks),
                            periodGenerator=PeriodGenerator(
                                interval=periodInterval),
-                           utilization=RandomValue(floatrange=(0.9, 1.0)))
+                           utilization=RandomValue(floatrange=uRange))
 
     def filterHyperperiod():
         validSystems = 0
@@ -90,14 +99,14 @@ def multicoreLoop(tasksets, nbProcesses, disablePrep):
     return failures
 
 
-def allTasksets(base, top, period1, tasksetSizes, nbSystems, seed):
+def allTasksets(base, top, period1, tasksetSizes, nbSystems, seed, uRange):
     for periodHi in range(base, top):
         periodInterval = (period1, periodHi)
         for nbTasks in tasksetSizes:
             tasksets = genTasksets(nbSystems,
                                    seed + periodHi,
                                    periodInterval,
-                                   nbTasks)
+                                   nbTasks, uRange)
             yield from tasksets
 
 
@@ -175,22 +184,21 @@ def main(args):
     logging.info(
         'Running dpsearch on {} systems with seed {}'.format(nbSystems,
                                                              seed))
-    # period1 = 40
-    # base = 50
-    # top = 120
-    # tasksetSizes = [3, 4, 5]
 
-    period1 = 24
-    base = 50
-    top = 91
-    tasksetSizes = [3]
+    period1 = int(args['--period1'])
+    base = int(args['--pBase'])
+    top = int(args['--pTop']) + 1
+    tSizeStr = args['--tSizes']
+    uRange = [float(s) for s in args['--uRange'].split(',')]
+    tasksetSizes = [int(s) for s in tSizeStr.split(',')]
 
     tasksets = list(allTasksets(base,
                                 top,
                                 period1,
                                 tasksetSizes,
                                 nbSystems,
-                                seed))
+                                seed,
+                                uRange))
 
     if not args['-l']:
         runMcSearch(tasksets,
