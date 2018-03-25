@@ -1,4 +1,3 @@
-
 import pytest
 
 from crpd.model import Task, Taskset
@@ -7,190 +6,19 @@ from crpd.sim import SimulationRun, SimulationSetup
 from crpd.hist import DeadlineMiss
 from crpd.gen import TasksetGenerator, RandomValue, PeriodGenerator
 from dualpriority.burns import burnsWellingsPolicy
-from dualpriority.policies import (rmLaxityPromotions,
-                                   dichotomicPromotionSearch,
-                                   dajamPromotions,
-                                   genLpViableTasks,
-                                   greedyDeadlineFixPolicy)
-from dualpriority.threeTasks import (RMWorstCaseLaxity3TaskOptimiser,
-                                     FixedPointThreeTaskOptimiser,
-                                     OptimisationFailure)
-
-
-def test_noPrepPaperFailure():
-    taskset = Taskset(Task(3, 6),
-                      Task(4, 9),
-                      Task(2, 36))
-
-    policy = rmLaxityPromotions(taskset, lpvPrep=False)
-    setup = SimulationSetup(taskset,
-                            taskset.hyperperiod,
-                            schedulingPolicy=policy,
-                            deadlineMissFilter=True)
-    result = SimulationRun(setup).result()
-    history = result.history
-    assert history.hasDeadlineMiss()
-
-
-def test_rmMinusRmSearchSuccesses():
-    systems = (Taskset(Task(9, 40),
-                       Task(9, 74),
-                       Task(35, 54)),
-               Taskset(Task(1, 40),
-                       Task(17, 106),
-                       Task(29, 62),
-                       Task(33, 96)),
-               Taskset(Task(11, 40),
-                       Task(14, 82),
-                       Task(31, 58)),
-               Taskset(Task(21, 40),
-                       Task(1, 58),
-                       Task(25, 57)),
-               Taskset(Task(1, 40),
-                       Task(12, 101),
-                       Task(16, 48),
-                       Task(37, 73)))
-
-    for taskset in systems:
-        policy = dichotomicPromotionSearch(taskset)
-        setup = SimulationSetup(taskset,
-                                taskset.hyperperiod,
-                                schedulingPolicy=policy,
-                                deadlineMissFilter=True)
-        result = SimulationRun(setup).result()
-        history = result.history
-        assert not history.hasDeadlineMiss()
-
-
-def test_rmMinusRmSearchFailures():
-    systems = (Taskset(Task(1, 40),
-                       Task(17, 119),
-                       Task(7, 60),
-                       Task(35, 100),
-                       Task(27, 75)),
-               Taskset(Task(1, 40),
-                       Task(16, 92),
-                       Task(27, 75),
-                       Task(17, 55),
-                       Task(6, 50)),
-               Taskset(Task(1, 40),
-                       Task(16, 112),
-                       Task(7, 60),
-                       Task(35, 100),
-                       Task(27, 75)),
-               Taskset(Task(1, 40),
-                       Task(16, 91),
-                       Task(27, 75),
-                       Task(17, 55),
-                       Task(6, 50)),
-               Taskset(Task(1, 40),
-                       Task(9, 107),
-                       Task(1, 54),
-                       Task(43, 60),
-                       Task(7, 51)))
-
-    for taskset in systems:
-        policy = dichotomicPromotionSearch(taskset)
-        setup = SimulationSetup(taskset,
-                                taskset.hyperperiod,
-                                schedulingPolicy=policy,
-                                deadlineMissFilter=True)
-        result = SimulationRun(setup).result()
-        history = result.history
-        assert history.hasDeadlineMiss()
-
-
-def test_GDF_3tasks():
-    taskset = Taskset(Task(21, 40),
-                      Task(1, 58),
-                      Task(25, 57))
-
-    policy = greedyDeadlineFixPolicy(taskset)
-    setup = SimulationSetup(taskset,
-                            taskset.hyperperiod,
-                            schedulingPolicy=policy,
-                            deadlineMissFilter=True)
-    result = SimulationRun(setup).result()
-    history = result.history
-    assert not history.hasDeadlineMiss()
-
-
-@pytest.mark.skip
-def test_GDF_4tasks():
-    taskset = Taskset(Task(1, 40),
-                      Task(12, 101),
-                      Task(16, 48),
-                      Task(37, 73))
-
-    policy = greedyDeadlineFixPolicy(taskset)
-    setup = SimulationSetup(taskset,
-                            taskset.hyperperiod,
-                            schedulingPolicy=policy,
-                            deadlineMissFilter=True)
-    result = SimulationRun(setup).result()
-    history = result.history
-    assert not history.hasDeadlineMiss()
-
-
-@pytest.mark.skip
-def test_GDF_5tasks():
-    taskset = Taskset(Task(1, 40),
-                      Task(9, 107),
-                      Task(1, 54),
-                      Task(43, 60),
-                      Task(7, 51))
-    policy = greedyDeadlineFixPolicy(taskset)
-    setup = SimulationSetup(taskset,
-                            taskset.hyperperiod,
-                            schedulingPolicy=policy,
-                            deadlineMissFilter=True)
-    result = SimulationRun(setup).result()
-    history = result.history
-    assert not history.hasDeadlineMiss()
-
-
-@pytest.mark.skip
-def test_GDF_bulk():
-    systems = (Taskset(Task(1, 40),
-                       Task(17, 119),
-                       Task(7, 60),
-                       Task(35, 100),
-                       Task(27, 75)),
-               Taskset(Task(1, 40),
-                       Task(16, 92),
-                       Task(27, 75),
-                       Task(17, 55),
-                       Task(6, 50)),
-               Taskset(Task(1, 40),
-                       Task(16, 112),
-                       Task(7, 60),
-                       Task(35, 100),
-                       Task(27, 75)),
-               Taskset(Task(9, 40),
-                       Task(9, 74),
-                       Task(35, 54)),
-               Taskset(Task(1, 40),
-                       Task(17, 106),
-                       Task(29, 62),
-                       Task(33, 96)),
-               Taskset(Task(1, 40),
-                       Task(16, 91),
-                       Task(27, 75),
-                       Task(17, 55),
-                       Task(6, 50)),
-               Taskset(Task(11, 40),
-                       Task(14, 82),
-                       Task(31, 58)))
-
-    for taskset in systems:
-        policy = greedyDeadlineFixPolicy(taskset)
-        setup = SimulationSetup(taskset,
-                                taskset.hyperperiod,
-                                schedulingPolicy=policy,
-                                deadlineMissFilter=True)
-        result = SimulationRun(setup).result()
-        history = result.history
-        assert not history.hasDeadlineMiss()
+from dualpriority.policies import (
+    ValidPromotionNotFound,
+    rmLaxityPromotions,
+    dichotomicPromotionSearch,
+    dajamPromotions,
+    genLpViableTasks,
+    greedyDeadlineFixPolicy,
+)
+from dualpriority.threeTasks import (
+    RMWorstCaseLaxity3TaskOptimiser,
+    FixedPointThreeTaskOptimiser,
+    OptimisationFailure,
+)
 
 
 def test_lpvTrivial1():
@@ -247,95 +75,6 @@ def test_lpvSearch():
     assert lpvTasks == expected
 
 
-def test_noPreprocessingFailures():
-    systems = (Taskset(Task(1, 40),
-                       Task(17, 119),
-                       Task(7, 60),
-                       Task(35, 100),
-                       Task(27, 75)),
-               Taskset(Task(1, 40),
-                       Task(16, 92),
-                       Task(27, 75),
-                       Task(17, 55),
-                       Task(6, 50)),
-               Taskset(Task(1, 40),
-                       Task(16, 112),
-                       Task(7, 60),
-                       Task(35, 100),
-                       Task(27, 75)),
-               Taskset(Task(1, 40),
-                       Task(12, 101),
-                       Task(16, 48),
-                       Task(37, 73)),
-               Taskset(Task(9, 40),
-                       Task(9, 74),
-                       Task(35, 54)),
-               Taskset(Task(1, 40),
-                       Task(17, 106),
-                       Task(29, 62),
-                       Task(33, 96)),
-               Taskset(Task(1, 40),
-                       Task(16, 91),
-                       Task(27, 75),
-                       Task(17, 55),
-                       Task(6, 50)),
-               Taskset(Task(11, 40),
-                       Task(14, 82),
-                       Task(31, 58)),
-               Taskset(Task(1, 40),
-                       Task(9, 107),
-                       Task(1, 54),
-                       Task(43, 60),
-                       Task(7, 51)),
-               Taskset(Task(21, 40),
-                       Task(1, 58),
-                       Task(25, 57)))
-
-    for taskset in systems:
-        lpvTasks = set(genLpViableTasks(taskset))
-        assert not lpvTasks
-        policy = rmLaxityPromotions(taskset)
-        setup = SimulationSetup(taskset,
-                                taskset.hyperperiod,
-                                schedulingPolicy=policy,
-                                deadlineMissFilter=True)
-        result = SimulationRun(setup).result()
-        history = result.history
-        assert history.hasDeadlineMiss()
-
-
-def test_noPrepFailure1():
-    taskset = Taskset(Task(7, 24),
-                      Task(4, 50),
-                      Task(22, 36))
-
-    policy = rmLaxityPromotions(taskset)
-    setup = SimulationSetup(taskset,
-                            taskset.hyperperiod,
-                            schedulingPolicy=policy,
-                            trackHistory=True,
-                            trackPreemptions=False)
-    result = SimulationRun(setup).result()
-    history = result.history
-    assert history.hasDeadlineMiss()
-
-
-def test_withPrepFailure1():
-    taskset = Taskset(Task(1, 24),
-                      Task(12, 127),
-                      Task(11, 26),
-                      Task(1, 100),
-                      Task(16, 39))
-    policy = rmLaxityPromotions(taskset)
-    setup = SimulationSetup(taskset,
-                            taskset.hyperperiod,
-                            schedulingPolicy=policy,
-                            deadlineMissFilter=True)
-    result = SimulationRun(setup).result()
-    history = result.history
-    assert history.hasDeadlineMiss()
-
-
 def test_dajamPromo1():
     t1 = Task(3, 6)
     t2 = Task(2, 8)
@@ -377,15 +116,6 @@ def test_counterExample1():
     t3 = Task(1, 60)
     taskset = Taskset(t1, t2, t3)
 
-    rmlPolicy = rmLaxityPromotions(taskset)
-    rmlSetup = SimulationSetup(taskset,
-                               taskset.hyperperiod,
-                               schedulingPolicy=rmlPolicy,
-                               trackHistory=True,
-                               trackPreemptions=False)
-    rmlHistory = SimulationRun(rmlSetup).result().history
-    assert rmlHistory.hasDeadlineMiss()
-
     dPolicy = dichotomicPromotionSearch(taskset)
     dSetup = SimulationSetup(taskset,
                              taskset.hyperperiod,
@@ -394,23 +124,6 @@ def test_counterExample1():
                              trackPreemptions=False)
     dHistory = SimulationRun(dSetup).result().history
     assert not dHistory.hasDeadlineMiss()
-
-
-def test_example1():
-    t1 = Task(38, 51)
-    t2 = Task(1, 52)
-    t3 = Task(8, 42)
-    taskset = Taskset(t1, t2, t3)
-
-    policy = rmLaxityPromotions(taskset)
-    setup = SimulationSetup(taskset,
-                            taskset.hyperperiod,
-                            schedulingPolicy=policy,
-                            trackHistory=True,
-                            trackPreemptions=False)
-    result = SimulationRun(setup).result()
-    history = result.history
-    assert not history.hasDeadlineMiss()
 
 
 def test_example2():
@@ -637,9 +350,9 @@ def test_firstT2Job1Standard():
     taskset = Taskset(t1, t2, t3)
 
     policy = DualPrioritySchedulingPolicy(
-        (t1, DualPriorityTaskInfo(3, 10, -3)),
-        (t2, DualPriorityTaskInfo(2, 14, -2)),
-        (t3, DualPriorityTaskInfo(1)))
+          (t1, DualPriorityTaskInfo(3, 10, -3)),
+          (t2, DualPriorityTaskInfo(2, 14, -2)),
+          (t3, DualPriorityTaskInfo(1)))
     setup = SimulationSetup(taskset,
                             time=taskset.hyperperiod,
                             schedulingPolicy=policy,
@@ -690,9 +403,9 @@ def test_analysisBW1():
     policy = dichotomicPromotionSearch(taskset)
 
     expectedPolicy = DualPrioritySchedulingPolicy(
-        (t1, DualPriorityTaskInfo(3, 3, -3)),
-        (t2, DualPriorityTaskInfo(2, 6, -2)),
-        (t3, DualPriorityTaskInfo(1)))
+          (t1, DualPriorityTaskInfo(3, 3, -3)),
+          (t2, DualPriorityTaskInfo(2, 4, -2)),
+          (t3, DualPriorityTaskInfo(1)))
     assert expectedPolicy == policy
 
 
@@ -706,10 +419,10 @@ def test_analysisBW2():
     policy = dichotomicPromotionSearch(taskset)
 
     expectedPolicy = DualPrioritySchedulingPolicy(
-        (t1, DualPriorityTaskInfo(4, 9, -4)),
-        (t2, DualPriorityTaskInfo(3, 9, -3)),
-        (t3, DualPriorityTaskInfo(2)),
-        (t4, DualPriorityTaskInfo(1)))
+          (t1, DualPriorityTaskInfo(4, 6, -4)),
+          (t2, DualPriorityTaskInfo(3, 8, -3)),
+          (t3, DualPriorityTaskInfo(2, 10, -2)),
+          (t4, DualPriorityTaskInfo(1)))
     assert expectedPolicy == policy
 
 
@@ -723,10 +436,10 @@ def test_analysisBW3():
     policy = dichotomicPromotionSearch(taskset)
 
     expectedPolicy = DualPrioritySchedulingPolicy(
-        (t1, DualPriorityTaskInfo(4, 12, -4)),
-        (t2, DualPriorityTaskInfo(3, 11, -3)),
-        (t3, DualPriorityTaskInfo(2, 8, -2)),
-        (t4, DualPriorityTaskInfo(1)))
+          (t1, DualPriorityTaskInfo(4, 8, -4)),
+          (t2, DualPriorityTaskInfo(3, 10, -3)),
+          (t3, DualPriorityTaskInfo(2, 3, -2)),
+          (t4, DualPriorityTaskInfo(1)))
     assert policy == expectedPolicy
 
 
@@ -741,11 +454,11 @@ def test_analysisBW4():
     policy = dichotomicPromotionSearch(taskset)
 
     expectedPolicy = DualPrioritySchedulingPolicy(
-        (t1, DualPriorityTaskInfo(5, 3, -5)),
-        (t2, DualPriorityTaskInfo(4, 4, -4)),
-        (t3, DualPriorityTaskInfo(3, 6, -3)),
-        (t4, DualPriorityTaskInfo(2, 18, -2)),
-        (t5, DualPriorityTaskInfo(1)))
+          (t1, DualPriorityTaskInfo(5, 2, -5)),
+          (t2, DualPriorityTaskInfo(4, 3, -4)),
+          (t3, DualPriorityTaskInfo(3, 6, -3)),
+          (t4, DualPriorityTaskInfo(2, 15, -2)),
+          (t5, DualPriorityTaskInfo(1)))
     assert policy == expectedPolicy
 
 

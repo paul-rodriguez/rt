@@ -3,10 +3,6 @@ from crpd.policy import DualPrioritySchedulingPolicy, DualPriorityTaskInfo
 from crpd.sim import SimulationRun, SimulationSetup, DeadlineMissFilter
 
 
-class ValidPromotionNotFound(Exception):
-    pass
-
-
 def rmSortedTasks(taskset):
     sortedTasks = sorted(taskset,
                          key=lambda x: (x.arrivalDistribution.minimal,
@@ -63,7 +59,9 @@ def baseRMRMPolicy(taskset):
         shift = len(taskset)
         rmSortedTaskset = rmSortedTasks(taskset)
         for priority, task in enumerate(rmSortedTaskset):
-            tInfo = DualPriorityTaskInfo(priority, task.minimalInterArrivalTime, priority - shift)
+            tInfo = DualPriorityTaskInfo(priority,
+                                         task.minimalInterArrivalTime,
+                                         priority - shift)
             yield task, tInfo
 
     policy = DualPrioritySchedulingPolicy(*genPolicy())

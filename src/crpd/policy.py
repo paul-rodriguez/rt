@@ -104,6 +104,9 @@ class DualPrioritySchedulingPolicy(AbstractSchedulingPolicy):
     def promotedTasks(self):
         return {task for task in self.tasks() if self.hasPromotion(task)}
 
+    def items(self):
+        return self._taskPriorities
+
 
 class DualPriorityTaskInfo(ValueEqual):
 

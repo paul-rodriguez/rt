@@ -1,18 +1,23 @@
-
 import logging
 
 from crpd.policy import DualPrioritySchedulingPolicy, DualPriorityTaskInfo
 from crpd.sim import SimulationSetup, SimulationRun
 from crpd.stats import AggregatorTag
-from .internals import (rmSortedTasks,
-                        minusRmSortedTasks,
-                        baseRMPolicy,
-                        getHistory,
-                        baseRMRMPolicy,
-                        findFirstDeadlineMiss,
-                        fixRMRMPolicy)
+from .internals import (
+    rmSortedTasks,
+    minusRmSortedTasks,
+    baseRMPolicy,
+    getHistory,
+    baseRMRMPolicy,
+    findFirstDeadlineMiss,
+    fixRMRMPolicy,
+)
 
 logger = logging.getLogger(__name__)
+
+
+class ValidPromotionNotFound(Exception):
+    pass
 
 
 def dajamPromotions(taskset):
@@ -27,7 +32,7 @@ def dajamPromotions(taskset):
     def genPromotions():
         antiWcets = [task.minimalInterArrivalTime - task.wcet
                      for task in rmSortedTaskset]
-        return {task: min(antiWcets[:i+1])
+        return {task: min(antiWcets[:i + 1])
                 for i, task in enumerate(rmSortedTaskset)}
 
     def genPrios():
@@ -81,7 +86,7 @@ def rmLaxityPromotions(taskset, lpvPrep=True):
     else:
         lpViableTasks = []
     nbViableTasks = len(lpViableTasks)
-    promotedTasks = rmSortedTaskset[:-(1+nbViableTasks)]
+    promotedTasks = rmSortedTaskset[:-(1 + nbViableTasks)]
 
     def genPrios():
         for i, task in enumerate(promotedTasks):
@@ -91,7 +96,7 @@ def rmLaxityPromotions(taskset, lpvPrep=True):
             yield (task,
                    DualPriorityTaskInfo(maxPrio - i, promotion, i - maxPrio))
         if nbViableTasks < len(taskset):
-            yield (rmSortedTaskset[-(1+nbViableTasks)],
+            yield (rmSortedTaskset[-(1 + nbViableTasks)],
                    DualPriorityTaskInfo(1))
         for i, task in enumerate(reversed(lpViableTasks)):
             prio = maxPrio + nbViableTasks + i
@@ -111,16 +116,48 @@ def dichotomicPromotionSearch(taskset):
     schedulable with RM, the search takes that into account.
     """
 
-    rmPolicy = baseRMPolicy(taskset)
-    history = getHistory(taskset, rmPolicy)
-    dualExclude = _rmExcludedTasks(taskset, history)
-    dualInclude = set(taskset) - dualExclude
-    startMinusRMPolicy = _setupPolicyForDual(dualInclude, rmPolicy)
+    lpViableTasks = list(genLpViableTasks(taskset))
+    basePolicy = _baseLPVPolicy(taskset, lpViableTasks)
+    dualInclude = set(taskset) - set(lpViableTasks)
+    startMinusRMPolicy = _setupPolicyForDual(dualInclude, basePolicy)
     rmSortedIncluded = rmSortedTasks(dualInclude)
     builtPolicy = _loopTasksToPromote(rmSortedIncluded,
+                                      set(lpViableTasks),
                                       taskset,
                                       startMinusRMPolicy)
-    return builtPolicy
+    cleanPolicy = _cleanRMm1RMpolicy(builtPolicy)
+    return cleanPolicy
+
+
+def _cleanRMm1RMpolicy(policy):
+    def genInfo():
+        sortedInfo = sorted(policy.items(), key=lambda x: x[1].lowPriority())
+        firstTask, _ = sortedInfo[0]
+        yield firstTask, DualPriorityTaskInfo(1)
+        spuriousPromo = True
+        for task, info in sortedInfo[1:]:
+            spuriousPromo = (spuriousPromo and
+                             info.hasPromotion and
+                             task.minimalInterArrivalTime == info.promotion)
+            if spuriousPromo:
+                newInfo = DualPriorityTaskInfo(info.lowPriority)
+                yield task, newInfo
+            else:
+                yield task, info
+
+    return DualPrioritySchedulingPolicy(*genInfo())
+
+
+def _baseLPVPolicy(taskset, lpViableTasks):
+    maxPrio = len(taskset)
+
+    def genPrios():
+        for i, task in enumerate(reversed(lpViableTasks)):
+            prio = maxPrio + len(lpViableTasks) + i
+            yield (task, DualPriorityTaskInfo(prio))
+
+    policy = DualPrioritySchedulingPolicy(*genPrios())
+    return policy
 
 
 def genLpViableTasks(taskset):
@@ -187,12 +224,11 @@ def _simuRMResponseTimes(taskset):
                             trackPreemptions=False)
     result = SimulationRun(setup).result()
     longestResponseTimes = result.aggregateStat(
-        AggregatorTag.LongestResponseTime)
+          AggregatorTag.LongestResponseTime)
     return longestResponseTimes
 
 
 def responseTime(task, interferingTasks):
-
     def interferences(time):
         for t in interferingTasks:
             w = t.wcet
@@ -246,7 +282,7 @@ def fpRMResponseTimes(taskset):
     return dict(genDict())
 
 
-def _setupPolicyForDual(includeSet, baseRMPolicy):
+def _setupPolicyForDual(includeSet, basePolicy):
     rmSorted = rmSortedTasks(includeSet)
     maxPrio = len(includeSet)
 
@@ -260,42 +296,38 @@ def _setupPolicyForDual(includeSet, baseRMPolicy):
                                              highPrio)
             yield task, schedInfo
 
-    return baseRMPolicy.withUpdate(*genPrios())
+    return basePolicy.withUpdate(*genPrios())
 
 
 def _loopTasksToPromote(tasksToPromote,
+                        tasksToTest,
                         taskset,
                         policy):
     if not tasksToPromote:
         return policy
     taskToPromote = tasksToPromote[0]
     newTasksToPromote = tasksToPromote[1:]
-    passWithoutPromotion = _successForTask(taskToPromote, taskset, policy)
-    if passWithoutPromotion:
-        cleanedPolicy = _removedPromotions(tasksToPromote, policy)
-        return cleanedPolicy
-    else:
-        maxPromo = policy.promotion(taskToPromote)
-        promotion = _loopTaskPromotion(taskToPromote,
+    newTasksToTest = tasksToTest.union({taskToPromote})
+    maxPromo = policy.promotion(taskToPromote)
+    updatedPolicy = _loopTaskPromotion(taskToPromote,
+                                       newTasksToPromote,
+                                       newTasksToTest,
                                        taskset,
                                        policy,
                                        0,
                                        maxPromo)
-        updatedPolicy = _copyWithPromotion(taskToPromote, policy, promotion)
-        return _loopTasksToPromote(newTasksToPromote,
-                                   taskset,
-                                   updatedPolicy)
+    return updatedPolicy
 
 
-def _successForTask(promotedTask, taskset, policy):
-    history = getHistory(taskset, policy, promotedTask)
-    hasDeadlineMiss = len(history.deadlineMisses(taskset.hyperperiod,
-                                                 task=promotedTask)) > 0
+def _successForTasks(tasksToTest, taskset, policy):
+    history = getHistory(taskset, policy, *tasksToTest)
+    hasDeadlineMiss = any(len(history.deadlineMisses(taskset.hyperperiod,
+                                                     task=t)) > 0
+                          for t in tasksToTest)
     return not hasDeadlineMiss
 
 
 def _removedPromotions(tasks, policy):
-
     def genPrios():
         for task in tasks:
             lowPrio = policy.lowPriority(task)
@@ -313,32 +345,39 @@ def _copyWithPromotion(task, policy, promotion):
     return updatedPolicy
 
 
-def _loopTaskPromotion(taskToPromote, taskset, policy, minPromo, maxPromo):
+def _loopTaskPromotion(taskToPromote,
+                       tasksToPromote,
+                       tasksToTest,
+                       taskset,
+                       policy,
+                       minPromo,
+                       maxPromo):
     promotion = (minPromo + maxPromo) // 2
     updatedPolicy = _copyWithPromotion(taskToPromote, policy, promotion)
-    hasDeadlineMiss = not _successForTask(taskToPromote,
-                                          taskset,
-                                          updatedPolicy)
-    if hasDeadlineMiss:
+    hasDeadlineMiss = not _successForTasks(tasksToTest,
+                                           taskset,
+                                           updatedPolicy)
+    failed = hasDeadlineMiss
+    if not hasDeadlineMiss:
+        try:
+            endPolicy = _loopTasksToPromote(tasksToPromote,
+                                            tasksToTest,
+                                            taskset,
+                                            updatedPolicy)
+        except ValidPromotionNotFound:
+            failed = True
+
+    if failed:
         if promotion == 0:
-            raise _ValidPromotionNotFound
-        return _loopTaskPromotion(taskToPromote,
-                                  taskset,
-                                  updatedPolicy,
-                                  minPromo,
-                                  promotion)
-    else:
-        if maxPromo == minPromo + 1:
-            logger.info('Assigning promotion %s for %s',
-                        promotion,
-                        taskToPromote)
-            return promotion
-        else:
-            return _loopTaskPromotion(taskToPromote,
-                                      taskset,
-                                      updatedPolicy,
-                                      promotion,
-                                      maxPromo)
+            raise ValidPromotionNotFound
+        endPolicy = _loopTaskPromotion(taskToPromote,
+                                       tasksToPromote,
+                                       tasksToTest,
+                                       taskset,
+                                       updatedPolicy,
+                                       minPromo,
+                                       promotion)
+    return endPolicy
 
 
 def _rmExcludedTasks(taskset, history):
@@ -352,4 +391,3 @@ def _rmExcludedTasks(taskset, history):
                 break
 
     return set(gen())
-

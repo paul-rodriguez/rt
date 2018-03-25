@@ -1,4 +1,5 @@
 import logging
+import pytest
 
 from crpd.sim import SimulationSetup
 from crpd.hist import (SimulatorState, EDFSchedulerState,
@@ -8,6 +9,7 @@ from crpd.model import Task, Taskset, FixedArrivalDistribution
 from crpd.runner import simulationRunner
 
 
+@pytest.mark.skip
 def test_monocoreRun():
     t1 = Task(1, 10, FixedArrivalDistribution(10), displayName='t')
     setup = SimulationSetup(Taskset(t1), time=1000)
@@ -42,6 +44,7 @@ def test_monocoreRun():
         assert (state == expected)
 
 
+@pytest.mark.skip
 def test_simpleRun():
     t1 = Task(1, 10, FixedArrivalDistribution(10), displayName='t')
     setup = SimulationSetup(Taskset(t1), time=1000)
@@ -76,6 +79,7 @@ def test_simpleRun():
         assert (state == expected)
 
 
+@pytest.mark.skip
 def test_twoTasksets():
     t1 = Task(1, 10, FixedArrivalDistribution(10), displayName='t1')
     t2 = Task(2, 5, FixedArrivalDistribution(5), displayName='t2')
