@@ -1,6 +1,7 @@
 __pycache__
 *.pyc
-.cache/
+/.cache/
+/.idea/
 /virtualenv/
 /pypy/
 /scripts/pypy3.5-5.10.1-linux_x86_64-portable.tar.bz2
