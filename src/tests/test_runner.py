@@ -12,7 +12,7 @@ from crpd.runner import simulationRunner
 @pytest.mark.skip
 def test_monocoreRun():
     t1 = Task(1, 10, FixedArrivalDistribution(10), displayName='t')
-    setup = SimulationSetup(Taskset(t1), time=1000)
+    setup = SimulationSetup(Taskset(t1), time=1000, trackHistory=True)
     setups = [setup]
     runner = simulationRunner(setups, multicore=False)
     runner.start()
@@ -47,7 +47,7 @@ def test_monocoreRun():
 @pytest.mark.skip
 def test_simpleRun():
     t1 = Task(1, 10, FixedArrivalDistribution(10), displayName='t')
-    setup = SimulationSetup(Taskset(t1), time=1000)
+    setup = SimulationSetup(Taskset(t1), time=1000, trackHistory=True)
     setups = [setup]
     runner = simulationRunner(setups)
     runner.start()

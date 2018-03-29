@@ -100,7 +100,7 @@ def test_freePreemptionsTotals():
                      displayName='short')
 
     taskset = Taskset(longTask, shortTask)
-    setup = SimulationSetup(taskset, time=50)
+    setup = SimulationSetup(taskset, time=50, trackPreemptions=True)
     run = SimulationRun(setup)
     result = run.result()
     stats = SimulationStatistics(result)
@@ -125,7 +125,7 @@ def test_logPreemptionsTotals():
                      displayName='short')
 
     taskset = Taskset(longTask, shortTask)
-    setup = SimulationSetup(taskset, time=5000)
+    setup = SimulationSetup(taskset, time=5000, trackPreemptions=True)
     run = SimulationRun(setup)
     result = run.result()
     stats = SimulationStatistics(result)

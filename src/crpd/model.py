@@ -30,7 +30,7 @@ class Taskset(ValueEqual):
         res = 1
         for task in self._tasks:
             res = lcm(res, task.arrivalDistribution.minimal)
-        return res
+        return int(res)
 
     @property
     def utilization(self):
@@ -65,6 +65,14 @@ class Task(ValueEqual):
                  preemptionCost=None,
                  displayName=None,
                  uniqueId=None):
+        """
+        Creates a new Task.
+
+        Unless the uniqueId parameter is specified, each new Task created with
+        this constructor is given an unique identifier.
+        This identifier is used when comparing Tasks, meaning that unless the
+        uniqueId is the same, two Tasks will be unequal.
+        """
         super().__init__()
         assert wcet > 0
         self._wcet = wcet
@@ -128,6 +136,16 @@ class Task(ValueEqual):
 
     def arrivalTime(self, releaseIndex):
         return self._arrivalDistrib.arrivalTime(releaseIndex)
+
+    @classmethod
+    def resetIdCounter(cls):
+        """
+        Resets the unique ID counter for newly created Tasks.
+
+        This is convenient for testing, but it shouldn't be useful in a normal
+        context.
+        """
+        cls._uniqueIdCounter = 0
 
     def _nonValueFields(self):
         return '_displayName',

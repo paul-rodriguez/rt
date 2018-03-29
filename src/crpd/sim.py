@@ -33,8 +33,8 @@ class SimulationSetup(ValueEqual):
                  time=1000,
                  schedulingPolicy=None,
                  deadlineMissFilter=False,
-                 trackHistory=True,
-                 trackPreemptions=True,
+                 trackHistory=False,
+                 trackPreemptions=False,
                  aggregatorTags=None):
         super().__init__()
         self._taskset = taskset
