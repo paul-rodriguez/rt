@@ -81,16 +81,16 @@ class DualPrioritySchedulingPolicy(AbstractSchedulingPolicy):
         return self.schedulerInfo(task).priorityAt(relativeTime)
 
     def lowPriority(self, task):
-        return self.schedulerInfo(task).lowPriority()
+        return self.schedulerInfo(task).lowPriority
 
     def highPriority(self, task):
-        return self.schedulerInfo(task).highPriority()
+        return self.schedulerInfo(task).highPriority
 
     def hasPromotion(self, task):
-        return self.schedulerInfo(task).hasPromotion()
+        return self.schedulerInfo(task).hasPromotion
 
     def promotion(self, task):
-        return self.schedulerInfo(task).promotion()
+        return self.schedulerInfo(task).promotion
 
     def createSchedulerInstance(self):
         return DualPriorityScheduler(policy=self)
@@ -129,20 +129,24 @@ class DualPriorityTaskInfo(ValueEqual):
 
         return 'DualPriorityTaskInfo({})'.format(fmt)
 
+    @property
     def hasPromotion(self):
         return self._promotion is not None
 
+    @property
     def promotion(self):
         return self._promotion
 
+    @property
     def lowPriority(self):
         return self._lowPriority
 
+    @property
     def highPriority(self):
         return self._highPriority
 
     def priorityAt(self, relativeTime):
-        if not self.hasPromotion() or (relativeTime < self._promotion):
+        if not self.hasPromotion or (relativeTime < self._promotion):
             return self._lowPriority
         else:
             return self._highPriority

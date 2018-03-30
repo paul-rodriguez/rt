@@ -12,4 +12,4 @@ gitRoot=$(git rev-parse --show-cdup)
 pytest=${gitRoot}virtualenv/bin/pytest
 testDir=${gitRoot}src/tests
 
-${pytest} ${testDir} -v -m "not slow" "$@"
+${pytest} ${testDir} -v "$@"

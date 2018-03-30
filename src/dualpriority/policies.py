@@ -131,7 +131,7 @@ def dichotomicPromotionSearch(taskset):
 
 def _cleanRMm1RMpolicy(policy):
     def genInfo():
-        sortedInfo = sorted(policy.items(), key=lambda x: x[1].lowPriority())
+        sortedInfo = sorted(policy.items(), key=lambda x: x[1].lowPriority)
         firstTask, _ = sortedInfo[0]
         yield firstTask, DualPriorityTaskInfo(1)
         spuriousPromo = True
