@@ -87,22 +87,25 @@ def execFunction(setup):
                             trackPreemptions=False)
     result = SimulationRun(setup).result()
     history = result.history
-    resultStr = '/n'
-    resultStr += 'Simulation done: {}\n'.format(taskset)
-    if history.hasDeadlineMiss():
-        resultStr += 'Deadline miss: {}\n'.format(history.firstDeadlineMiss())
-        resultStr += 'With policy: {}\n'.format(policy)
-    else:
-        resultStr += 'OK\n'
-    return resultStr
+    return history.hasDeadlineMiss(), policy
+    # resultStr = '/n'
+    # resultStr += 'Simulation done: {}\n'.format(taskset)
+    # if history.hasDeadlineMiss():
+    #     resultStr += 'Deadline miss: {}\n'.format(history.firstDeadlineMiss())
+    #     resultStr += 'With policy: {}\n'.format(policy)
+    # else:
+    #     resultStr += 'OK\n'
+    # return resultStr
 
 
 def runSimulations(setups, nbProcesses, output):
     setups = sorted(setups, key=lambda x: -x[0].hyperperiod)
     with ProcessPoolExecutor(max_workers=nbProcesses) as executor:
-        for resultStr in executor.map(execFunction,
+        for result in executor.map(execFunction,
                                       setups):
-            output.write(resultStr)
+            hasDm, policy = result
+            if not hasDm:
+                output.write('{}\n'.format(policy))
 
 
 def totalPolicies(taskset):
@@ -121,7 +124,7 @@ def main(args):
     print(args)
 
 
-    nbProcesses = 6
+    nbProcesses = 12
 
     taskset = Taskset(Task(8, 19),
                       Task(13, 29),
@@ -132,7 +135,7 @@ def main(args):
     policyGen = enumeratePolicies(taskset)
     setups = ((taskset, policy) for policy in policyGen)
 
-    chunkSize = 1000
+    chunkSize = 50000
     totalChunks = ((totalPolicies(taskset) - 1) // chunkSize) + 1
     setupSlice = list(itertools.islice(setups, chunkSize))
     chunkCnt = 0
@@ -142,8 +145,8 @@ def main(args):
         with open(args['FILE'], 'a', buffering=10000) as output:
             runSimulations(setupSlice, nbProcesses, output)
         end = time.perf_counter()
-        thisTime = end - start
-        totalTime += thisTime
+        chunkTime = end - start
+        totalTime += chunkTime
         chunkCnt += 1
         averageChunkTime = totalTime / chunkCnt
         if chunkCnt > 0:
@@ -151,10 +154,12 @@ def main(args):
         else:
             expectedRemChunkTime = 0
         print('Chunk {} / {} done. Time elapsed: {}. '
+              'Chunk time: {:.4}s. '
               'Average chunk time: {:.4}s. '
               'Expected remaining time: {}.'.format(chunkCnt,
                                                      totalChunks,
                                                      humanTime(totalTime),
+                                                     chunkTime,
                                                      averageChunkTime,
                                                      humanTime(expectedRemChunkTime)))
         setupSlice = list(itertools.islice(setups, chunkSize))
