@@ -116,9 +116,6 @@ class DualPriorityTaskInfo(ValueEqual):
         self._promotion = promotion
         self._highPriority = highPriority
 
-        if promotion is not None:
-            assert highPriority <= lowPriority
-
     def __repr__(self):
         if self._promotion is None:
             fmt = '{}'.format(self._lowPriority)
