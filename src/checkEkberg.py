@@ -77,35 +77,36 @@ def enumeratePolicies(taskset):
             yield buildPolicy(tasks, priorities, promos)
 
 
-def execFunction(setup):
-    taskset, policy = setup
-    setup = SimulationSetup(taskset,
-                            taskset.hyperperiod,
-                            schedulingPolicy=policy,
-                            deadlineMissFilter=True,
-                            trackHistory=False,
-                            trackPreemptions=False)
-    result = SimulationRun(setup).result()
-    history = result.history
-    return history.hasDeadlineMiss(), policy
-    # resultStr = '/n'
-    # resultStr += 'Simulation done: {}\n'.format(taskset)
-    # if history.hasDeadlineMiss():
-    #     resultStr += 'Deadline miss: {}\n'.format(history.firstDeadlineMiss())
-    #     resultStr += 'With policy: {}\n'.format(policy)
-    # else:
-    #     resultStr += 'OK\n'
-    # return resultStr
+def execFunction(taskset, processId, nbProcesses):
+    policyGen = itertools.islice(enumeratePolicies(taskset),
+                                 processId,
+                                 100000,
+                                 nbProcesses)
+    setups = ((taskset, policy) for policy in policyGen)
+
+    def generate():
+        for setup in setups:
+            taskset, policy = setup
+            setup = SimulationSetup(taskset,
+                                    taskset.hyperperiod,
+                                    schedulingPolicy=policy,
+                                    deadlineMissFilter=True,
+                                    trackHistory=False,
+                                    trackPreemptions=False)
+            result = SimulationRun(setup).result()
+            history = result.history
+            if not history.hasDeadlineMiss():
+                yield policy
+    return list(generate())
 
 
-def runSimulations(setups, nbProcesses, output):
-    setups = sorted(setups, key=lambda x: -x[0].hyperperiod)
-    with ProcessPoolExecutor(max_workers=nbProcesses) as executor:
-        for result in executor.map(execFunction,
-                                      setups):
-            hasDm, policy = result
-            if not hasDm:
-                output.write('{}\n'.format(policy))
+def runSimulations(taskset, nbProcesses, output, executor):
+    args = zip(*[(taskset, p, nbProcesses) for p in range(nbProcesses)])
+    for resultGroup in executor.map(execFunction,
+                                    *args):
+        print(resultGroup)
+        for policy in resultGroup:
+            output.write('{}\n'.format(policy))
 
 
 def totalPolicies(taskset):
@@ -124,7 +125,7 @@ def main(args):
     print(args)
 
 
-    nbProcesses = 12
+    nbProcesses = 16
 
     taskset = Taskset(Task(8, 19),
                       Task(13, 29),
@@ -135,34 +136,14 @@ def main(args):
     policyGen = enumeratePolicies(taskset)
     setups = ((taskset, policy) for policy in policyGen)
 
-    chunkSize = 50000
+    chunkSize = 100000
     totalChunks = ((totalPolicies(taskset) - 1) // chunkSize) + 1
     setupSlice = list(itertools.islice(setups, chunkSize))
     chunkCnt = 0
     totalTime = 0
-    while setupSlice:
-        start = time.perf_counter()
+    with ProcessPoolExecutor(max_workers=nbProcesses) as executor:
         with open(args['FILE'], 'a', buffering=10000) as output:
-            runSimulations(setupSlice, nbProcesses, output)
-        end = time.perf_counter()
-        chunkTime = end - start
-        totalTime += chunkTime
-        chunkCnt += 1
-        averageChunkTime = totalTime / chunkCnt
-        if chunkCnt > 0:
-            expectedRemChunkTime = averageChunkTime * (totalChunks - chunkCnt)
-        else:
-            expectedRemChunkTime = 0
-        print('Chunk {} / {} done. Time elapsed: {}. '
-              'Chunk time: {:.4}s. '
-              'Average chunk time: {:.4}s. '
-              'Expected remaining time: {}.'.format(chunkCnt,
-                                                     totalChunks,
-                                                     humanTime(totalTime),
-                                                     chunkTime,
-                                                     averageChunkTime,
-                                                     humanTime(expectedRemChunkTime)))
-        setupSlice = list(itertools.islice(setups, chunkSize))
+            runSimulations(taskset, nbProcesses, output, executor)
 
 
 if __name__ == '__main__':
